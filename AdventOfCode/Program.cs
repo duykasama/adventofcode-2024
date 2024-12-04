@@ -1,4 +1,4 @@
-﻿using AdventOfCode.Day3;
+﻿using AdventOfCode.Day4;
 
-Part1.Solve();
-// Part2.Solve();
+// Part1.Solve();
+Part2.Solve();
