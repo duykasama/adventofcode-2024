@@ -6,75 +6,59 @@ public static class Part2
     
     public static void Solve()
     {
-        using StreamReader streamReader = File.OpenText(InputPath);
+        IEnumerable<string> lines = File.ReadLines(InputPath);
         var safeCount = 0;
         
-        while (true)
+        foreach (string line in lines)
         {
-            string? line = streamReader.ReadLine();
-            if (line == null) break;
-            IEnumerable<string> parts = line.Split(" ").Where(p => !string.IsNullOrWhiteSpace(p));
-            List<int> sequence = [..parts.Select(int.Parse)];
-            var trend = 0;
-            var isSafe = true;
-            var canSkip = true;
-            var loopCount = 0;
-            for (int i = 0; i < sequence.Count; i++)
-            {
-                ++loopCount;
-                int previous = sequence[i];
-                if (i + 1 >= sequence.Count) break;
-                if (IsSafe(previous, sequence[i+1], ref trend)) continue; 
+            List<int> numbers = line.Split(' ').Select(int.Parse).ToList();
 
-                if (!canSkip)
-                {
-                    isSafe = false;
-                    break;
-                }
-
-                canSkip = false;
-                if (i + 2 >= sequence.Count) break;
-                if (loopCount <= 2) trend = 0;
-                if (IsSafe(previous, sequence[i + 2], ref trend))
-                {
-                    i++;
-                    continue;
-                }
-                if (i - 1 < 0) break;
-                if (loopCount <= 2) trend = 0;
-                if (IsSafe(sequence[i-1], sequence[i+1], ref trend)) continue;
-                
-                isSafe = false;
-                break;
-            }
-            
-            if (isSafe) safeCount++;
+            if (IsValidSequence(numbers)) safeCount++;
         }
         
         Console.WriteLine($"Result: {safeCount}");
     }
 
-    private static bool IsSafe(int numb1, int numb2, ref int trend)
+    private static bool IsValidSequence(List<int> numbers)
     {
-        int difference = numb1 - numb2;
-        int differenceAbs = Math.Abs(difference);
-        if (trend == 0)
+        if (CheckSequence(numbers))
+            return true;
+
+        for (int i = 0; i < numbers.Count; i++)
         {
-            switch (difference)
+            var tempList = new List<int>(numbers);
+            tempList.RemoveAt(i);
+            if (CheckSequence(tempList))
+                return true;
+        }
+
+        return false;
+
+        bool CheckSequence(List<int> sequence)
+        {
+            if (!IsIncreasingOrDecreasing(sequence)) return false;
+            
+            for (int i = 0; i < sequence.Count - 1; i++)
             {
-                case > 0:
-                    trend = 1;
-                    break;
-                case < 0:
-                    trend = -1;
-                    break;
-                default:
+                int diff = Math.Abs(sequence[i + 1] - sequence[i]);
+                if (diff is < 1 or > 3)
                     return false;
             }
-
-            return differenceAbs is <= 3 and > 0;
+            return true;
         }
-        if (difference * trend <= 0) return false;
-        return differenceAbs is <= 3 and > 0;
+
+        bool IsIncreasingOrDecreasing(List<int> sequence)
+        {
+            var copy = new List<int>(sequence);
+            copy.Sort();
+            if (IsSame(sequence, copy)) return true;
+            copy.Reverse();
+            return IsSame(sequence, copy);
+
+            bool IsSame(List<int> l1, List<int> l2)
+            {
+                return !l1.Where((t, i) => t != l2[i]).Any();
+            }
+        }
     }
 }
